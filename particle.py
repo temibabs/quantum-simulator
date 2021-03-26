@@ -18,9 +18,9 @@ class QuantumParticle(object):
     def evolve(self, hermitian):
         print()
 
-    def measure(self, dimension: int):
-        p_one = np.dot(self.bras[dimension, 0], self.kets[dimension, 0])
-        p_minus_one = np.dot(self.bras[dimension, 1], self.kets[dimension, 1])
+    def measurePosition(self, dimension: int):
+        p_one = self.bras[0, 0] * self.kets[0, 0]
+        p_minus_one = self.bras[dimension, 1] * self.kets[dimension, 1]
         return np.random.choice([+1, -1], p=[p_one, p_minus_one])
 
     def entangle(self):
