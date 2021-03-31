@@ -46,8 +46,17 @@ class QuantumAnimation(Constant):
     def __init__(self, function="np.exp(-0.5())", potential="(x)**2/2"):
         super().__init__()
 
+        self.psi: Union[None, WaveFunction2D] = None
+        self.U_t: Union[None, UnitaryOperator2D] = None
+        self.V: Union[None, np.ndarray, str] = None
+        self.V_latex: Union[None, str] = None
+
+        self.lines = None
+        self.line10 = None
+        self.line11 = None
+
         # String attributes
-        self.v_x = None
+        # self.v_x = None
         self._KE_ltx = r"-\frac{\hbar^2}{2m} \frac{d^2}{dx^2}"
         self._lmts_str = r"  %s$ \leq x \leq $%s" % \
                          (str(np.round(self.x0, 2)),
@@ -116,15 +125,6 @@ class QuantumAnimation(Constant):
 
         self._init_plots()
 
-        self.psi: Union[None, WaveFunction2D] = None
-        self.U_t: Union[None, UnitaryOperator2D] = None
-        self.V: Union[None, np.ndarray, str] = None
-        self.V_latex: Union[None, str] = None
-
-        self.lines = None
-        self.line10 = None
-        self.line11 = None
-
     def set_unitary(self, potential):
         if isinstance(potential, str):
             try:
@@ -169,7 +169,9 @@ class QuantumAnimation(Constant):
             print('Unable to parse input')
 
         if hasattr(self, "lines"):
-            self.update_draw_potential()
+            pass
+            # TODO: fix update_draw_potential
+            # self.update_draw_potential()
 
     def measure_position(self, *args):
         """
@@ -194,7 +196,7 @@ class QuantumAnimation(Constant):
         self.update_expected_energy_level()
 
     def measure_energy(self, *args):
-        if self.U_t.energy_eigenstates is not None:
+        if self.U_t.energy_eigenstates is None:
             self.U_t.set_energy_eigenstates()
         ee = np.sort(np.real(self.U_t.energy_eigenvalues))
         ee_dict = {e: (i + 1) for i, e in enumerate(ee)}
@@ -203,6 +205,7 @@ class QuantumAnimation(Constant):
         self._msg = ('Energy E = %s\n(%s energy level)'
                      % (str(np.round(np.real(e), 1)),
                         ordinate(str(ee_dict[np.real(e)]))))
+        print(self._msg)
         self._msg_i = 50
         self.update_expected_energy_level()
 
@@ -461,14 +464,14 @@ class QuantumAnimation(Constant):
         self._main_msg = self.lines[5].get_text()
 
     def update_draw_potential(self):
-        if np.amax(self.v_x > 0):
-            v_max = np.amax(self.v_x[1:-2])
-            self.lines[4].set_ydata(self.v_x / v_max * self.bounds[-1] * 0.95)
+        if np.amax(self.V_x > 0):
+            v_max = np.amax(self.V_x[1:-2])
+            self.lines[4].set_ydata(self.V_x / v_max * self.bounds[-1] * 0.95)
             v_max *= self._scale
 
-        elif np.amax(self.v_x > 0):
-            v_max = np.abs(np.amin(self.v_x[1:-2]))
-            self.lines[4].set_ydata(self.v_x / v_max * self.bounds[-1] * 0.95)
+        elif np.amax(self.V_x > 0):
+            v_max = np.abs(np.amin(self.V_x[1:-2]))
+            self.lines[4].set_ydata(self.V_x / v_max * self.bounds[-1] * 0.95)
 
         else:
             v_max = self.bounds[-1] * 0.95 * self._scale
@@ -573,7 +576,7 @@ class QuantumAnimation(Constant):
             self.U_t.energy_eigenvalues = eigenvalues
             self.U_t.energy_eigenstates = eigenvectors.T
 
-    def _animate(self):
+    def _animate(self, *args):
         """Produce a single frame of animation.
                 This of course involves advancing the wavefunction
                 in time using the unitary operator.
@@ -593,7 +596,7 @@ class QuantumAnimation(Constant):
         if self._show_p:
             psi = self.psi.p
         else:
-            psi = self.psi.x
+            psi = self.psi.x_wave * self.psi.y_wave
 
         # Set probability density or absolute value of wavefunction
         if self._display_probs:

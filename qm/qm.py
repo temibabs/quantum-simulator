@@ -66,7 +66,7 @@ class WaveFunction2D(Constant):
         if np.max(prob) != 0.:
             prob = prob / np.sum(prob)
         a = [i for i in range(len(prob))]
-        choice = np.random.choice(a, p=prob, replace=False)[0]
+        choice = np.random.choice(a, p=prob, replace=False)
         self.wave_function = eigenvectors.T[[choice]][0]
         self.normalize()
 
@@ -190,8 +190,7 @@ class UnitaryOperator2D(Constant):
         # self._HU =(1.0j*self.hbar/self.dt)*(self.U - self.id)
 
     def set_energy_eigenstates(self):
-        """Set the eigenstates and energy eigenvalues.
-        """
+        """Set the eigenstates and energy eigenvalues."""
         self._set_HU()
 
         eigvals, eigvects = np.linalg.eigh(self._HU)

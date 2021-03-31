@@ -1,25 +1,18 @@
 """
 This module is the GUI frontend using Tkinter
 for viewing and interacting with the quantum simulation.
-
-The GUI is inspired by the 1-Dimensional Particle States Applet
-by Paul Falstad and Quantum Bound States by PhET Colorado,
-both originally written in Java.
 """
-import numpy as np
-from qm.qm import UnitaryOperator2D, WaveFunction2D
-from qm.constants import Constant
-from matplotlib.backends import backend_tkagg
-from animation import QuantumAnimation, scale
-import tkinter as tk
 from typing import Tuple
 
-from util.energy import select_energy_level_ui, measure_energy_ui
+import numpy as np
+from matplotlib.backends import backend_tkagg
+
+from animation import QuantumAnimation, scale
+from qm.constants import Constant
+from qm.qm import UnitaryOperator2D, WaveFunction2D
+from util.energy import *
 
 np.seterr(all='raise')
-
-
-# Make numpy raise errors instead of warnings.
 
 
 class App(QuantumAnimation):
@@ -62,92 +55,23 @@ class App(QuantumAnimation):
         self.figure.patch.set_facecolor(colour)
 
         # Show Probability Distribution/Wavefunction
-        # TODO: Don't use a long and unnecessary lambda function
-        b = tk.Button(self.window,
-                      text='View Probability Distribution',
-                      command=lambda:
-                      [self.display_probability(),
-                       self.change_view_pd_wv.config(text='View Wavefunction')]
-                      if (self._display_probs is False)
-                      else [self.display_wavefunction(),
-                            self.change_view_pd_wv.config(text='View '
-                                                               'Probability '
-                                                               ' Distribution')])
-        self.change_view_pd_wv = b
-        self.change_view_pd_wv.grid(row=1, column=3, columnspan=2,
-                                    padx=(10, 10))
-
-        # Show Wavefunction in Position/Momentum Basis
-        b2 = tk.Button(self.window,
-                       text='View in Momentum Basis',
-                       command=lambda:
-                       [self.display_momentum(),
-                        self.change_view_pos_mom.config(
-                            text='View in Position Basis')] if (
-                               self._show_p is False) else [
-                           self.display_position(),
-                           self.change_view_pos_mom.config(
-                               text='View in Momentum'
-                                    ' Basis')])
-        self.change_view_pos_mom = b2
-        self.change_view_pos_mom.grid(row=2, column=3, columnspan=2,
-                                      padx=(10, 10))
+        change_view(self.window,
+                    commands=[self.change_view_to_pd, self.change_view_to_wf])
 
         # Change energy
-        select_energy_level_ui(self.window, command=self.mouse_menu_handler)
+        add_energy_level_dropdown(self.window, command=self.mouse_menu_handler)
 
-        # Measure
+        # Measurement
+        measurement_label = tk.Label(self.window, text='Measurement')
+        measurement_label.grid(row=7, column=3,
+                               sticky=tk.E + tk.W + tk.S, padx=(10, 10))
+        add_measurement_button(self.window, text='Energy',
+                               row=8, column=3, command=self.measure_energy)
+        add_measurement_button(self.window, text='Position',
+                               row=8, column=4, command=self.measure_position)
+        add_measurement_button(self.window, text='Momentum',
+                               row=8, column=5, command=self.measure_position)
 
-        # Measure energy
-        measure_energy_ui(self.window, text='Measure')
-
-        # Measure position
-
-        # Measure position button
-        # self.measure_position_button = tk.Button(
-        #     self.window,
-        #     text='Position',
-        #     command=self.measure_position)
-        # self.measure_position_button.grid(
-        #     row=4,
-        #     column=3,
-        #     columnspan=2,
-        #     sticky=tk.E + tk.W)
-
-        # Measure momentum button
-        # self.measure_momentum_button = tk.Button(
-        #     self.window,
-        #     text='Momentum',
-        #     command=self.measure_momentum)
-        # self.measure_momentum_button.grid(
-        #     row=5,
-        #     column=3,
-        #     columnspan=2,
-        #     sticky=tk.E + tk.W + tk.N + tk.S,
-        #     padx=(10, 10))
-
-        # Measure energy button
-        self.measure_energy_button = tk.Button(
-            self.window,
-            text='Energy',
-            command=self.measure_energy)
-        self.measure_energy_button.grid(
-            row=7,
-            column=3,
-            columnspan=2,
-            sticky=tk.E + tk.W + tk.N,
-            padx=(10, 10))
-
-        # # Mouse menu dropdown
-        # self.mouse_menu_label = tk.Label(
-        #     self.window,
-        #     text="Mouse:")
-        # self.mouse_menu_label.grid(
-        #     row=7,
-        #     column=3,
-        #     sticky=tk.W + tk.E + tk.S,
-        #     padx=(10, 10),
-        #     columnspan=2)
         # Mouse menu tuple
         self.mouse_menu_tuple = (
             "Reshape Wavefunction",
@@ -168,22 +92,22 @@ class App(QuantumAnimation):
         #                      padx=(10, 10))
 
         # Wavefunction entry field
-        self.enter_function_label = tk.Label(
-            self.window,
-            text="Enter Wavefunction \u03C8(x)")
-
-        self.enter_function_label.grid(row=9, column=3,
-                                       columnspan=2,
-                                       sticky=tk.E + tk.W + tk.S,
-                                       padx=(10, 10))
-        self.enter_function = tk.Entry(self.window)
-        self.enter_function.bind(
-            "<Return>",
-            self.update_wavefunction_by_name)
-        self.enter_function.grid(row=10, column=3,
-                                 columnspan=2,
-                                 sticky=tk.W + tk.E + tk.N + tk.S,
-                                 padx=(11, 11))
+        # self.enter_function_label = tk.Label(
+        #     self.window,
+        #     text="Enter Wavefunction \u03C8(x)")
+        #
+        # self.enter_function_label.grid(row=9, column=3,
+        #                                columnspan=2,
+        #                                sticky=tk.E + tk.W + tk.S,
+        #                                padx=(10, 10))
+        # self.enter_function = tk.Entry(self.window)
+        # self.enter_function.bind(
+        #     "<Return>",
+        #     self.update_wavefunction_by_name)
+        # self.enter_function.grid(row=10, column=3,
+        #                          columnspan=2,
+        #                          sticky=tk.W + tk.E + tk.N + tk.S,
+        #                          padx=(11, 11))
 
         # Update wavefunction button
         b2 = tk.Button(self.window, text='OK',
@@ -272,6 +196,12 @@ class App(QuantumAnimation):
         self.potential_is_reshaped = False
 
         # self.toggle_energy_levels()
+
+    def change_view_to_pd(self):
+        return None
+
+    def change_view_to_wf(self):
+        return None
 
     def destroy_wavefunction_sliders(self) -> None:
         """
@@ -864,14 +794,6 @@ class App(QuantumAnimation):
         return x, y
 
     def quit(self) -> None:
-        """
-        Quit the application.
-        Simply calling self.window.quit() only quits the application
-        in the command line, while the GUI itself still runs.
-        On the other hand, simply calling self.window.destroy()
-        destroys the GUI but doesn't give back control of the command
-        line. Therefore both need to be called.
-        """
         self.window.quit()
         self.window.destroy()
 
